@@ -8,21 +8,25 @@ const filter = (page, group, value, area = "첫 화면") =>
 const cards = (page) => page.locator(".cake-card");
 
 async function expectReadableMobileFilters(page) {
-  const labels = await page.locator("#results-filters .filter-option").evaluateAll(
-    buttons => buttons.map(button => {
-      const label = button.lastElementChild;
-      const range = document.createRange();
-      range.selectNodeContents(label);
-      const rects = [...range.getClientRects()];
-      const bounds = button.getBoundingClientRect();
-      return {
-        text: label.textContent,
-        lines: new Set(rects.map(rect => Math.round(rect.top))).size,
-        fits: rects.every(rect => rect.left >= bounds.left && rect.right <= bounds.right),
-        height: bounds.height,
-      };
-    }),
-  );
+  const labels = await page
+    .locator("#results-filters .filter-option")
+    .evaluateAll((buttons) =>
+      buttons.map((button) => {
+        const label = button.lastElementChild;
+        const range = document.createRange();
+        range.selectNodeContents(label);
+        const rects = [...range.getClientRects()];
+        const bounds = button.getBoundingClientRect();
+        return {
+          text: label.textContent,
+          lines: new Set(rects.map((rect) => Math.round(rect.top))).size,
+          fits: rects.every(
+            (rect) => rect.left >= bounds.left && rect.right <= bounds.right,
+          ),
+          height: bounds.height,
+        };
+      }),
+    );
   for (const label of labels) {
     expect(label.lines, label.text).toBe(1);
     expect(label.fits, label.text).toBe(true);
@@ -30,20 +34,20 @@ async function expectReadableMobileFilters(page) {
   }
 }
 
-test("category switching resets taste filters and shows the correct six menus", async ({
+test("category switching resets taste filters and shows the correct twelve menus", async ({
   page,
 }) => {
-  await expect(cards(page)).toHaveCount(6);
+  await expect(cards(page)).toHaveCount(12);
   await filter(page, "단맛", "달지 않음").click();
-  await expect(cards(page)).toHaveCount(3);
-  await page.getByRole("button", { name: "cheesecake" }).click();
   await expect(cards(page)).toHaveCount(6);
+  await page.getByRole("button", { name: "cheesecake" }).click();
+  await expect(cards(page)).toHaveCount(12);
   await expect(page.locator("#hero-filters")).toContainText("치즈 풍미");
   await expect(page.locator("#active-filters button")).toHaveCount(0);
   await filter(page, "치즈 풍미", "치즈맛 강함").click();
-  await expect(cards(page)).toHaveCount(3);
-  await page.getByRole("button", { name: "chococake" }).click();
   await expect(cards(page)).toHaveCount(6);
+  await page.getByRole("button", { name: "chococake" }).click();
+  await expect(cards(page)).toHaveCount(12);
   await expect(page.locator("#hero-filters")).toContainText("단맛");
 });
 
@@ -52,7 +56,7 @@ test("AND filters, toggle-off, mutually exclusive options and synchronized resul
 }) => {
   await filter(page, "단맛", "달지 않음").click();
   await filter(page, "식감", "꾸덕함").click();
-  await expect(cards(page)).toHaveCount(2);
+  await expect(cards(page)).toHaveCount(3);
   await filter(page, "스타일", "클래식파", "목록").click();
   await expect(cards(page)).toHaveCount(1);
   await expect(cards(page).first()).toContainText("딥 다크 가나슈");
@@ -61,24 +65,24 @@ test("AND filters, toggle-off, mutually exclusive options and synchronized resul
     "true",
   );
   await filter(page, "스타일", "클래식파").click();
-  await expect(cards(page)).toHaveCount(2);
+  await expect(cards(page)).toHaveCount(3);
   await filter(page, "단맛", "달콤함").click();
   await expect(filter(page, "단맛", "달지 않음")).toHaveAttribute(
     "aria-pressed",
     "false",
   );
-  await expect(cards(page)).toHaveCount(1);
+  await expect(cards(page)).toHaveCount(3);
   await page
     .getByRole("button", { name: "필터 초기화", exact: true })
     .first()
     .click();
-  await expect(cards(page)).toHaveCount(6);
+  await expect(cards(page)).toHaveCount(12);
 });
 
 test("GO scrolls to all menus when no filter is selected", async ({ page }) => {
   await page.getByRole("button", { name: "GO" }).click();
   await expect(page.locator("#results-title")).toBeFocused();
-  await expect(cards(page)).toHaveCount(6);
+  await expect(cards(page)).toHaveCount(12);
   await expect
     .poll(() => page.evaluate(() => window.scrollY))
     .toBeGreaterThan(200);
@@ -95,7 +99,7 @@ test("search, filters and price order work together; default order restores", as
     .getByRole("button", { name: "검색어 지우기", exact: true })
     .click();
   await page.getByLabel("정렬", { exact: true }).selectOption("asc");
-  await expect(cards(page).first()).toContainText("7,800원");
+  await expect(cards(page).first()).toContainText("7,600원");
   await page.getByLabel("정렬", { exact: true }).selectOption("desc");
   await expect(cards(page).first()).toContainText("8,900원");
   await page.getByLabel("정렬", { exact: true }).selectOption("default");
@@ -103,7 +107,7 @@ test("search, filters and price order work together; default order restores", as
   await page.getByRole("searchbox").fill("브라운 노트");
   await expect(cards(page)).toHaveCount(1);
   await page.getByRole("searchbox").fill("가나슈");
-  await expect(cards(page)).toHaveCount(1);
+  await expect(cards(page)).toHaveCount(2);
 });
 
 test("empty states let users reset filters and clear a failing search", async ({
@@ -112,6 +116,7 @@ test("empty states let users reset filters and clear a failing search", async ({
   await filter(page, "단맛", "달지 않음").click();
   await filter(page, "식감", "부드러움").click();
   await filter(page, "스타일", "클래식파").click();
+  await page.getByRole("searchbox").fill("오렌지");
   await expect(page.locator("#empty-state")).toBeVisible();
   await expect(page.locator("#empty-state")).toContainText(
     "선택한 맛에 맞는 케이크가 없어요",
@@ -120,13 +125,17 @@ test("empty states let users reset filters and clear a failing search", async ({
     .locator("#empty-state")
     .getByRole("button", { name: "필터 초기화" })
     .click();
-  await expect(cards(page)).toHaveCount(6);
+  await expect(cards(page)).toHaveCount(1);
+  await page
+    .getByRole("button", { name: "검색어 지우기", exact: true })
+    .click();
+  await expect(cards(page)).toHaveCount(12);
   await page.getByRole("searchbox").fill("없는케이크");
   await page
     .locator("#empty-state")
     .getByRole("button", { name: "검색어 지우기" })
     .click();
-  await expect(cards(page)).toHaveCount(6);
+  await expect(cards(page)).toHaveCount(12);
   await expect(page.getByRole("searchbox")).toHaveValue("");
 });
 
@@ -195,7 +204,7 @@ test("main controls respond to keyboard space, enter and tab", async ({
   await taste.focus();
   await page.keyboard.press("Space");
   await expect(taste).toHaveAttribute("aria-pressed", "true");
-  await expect(cards(page)).toHaveCount(3);
+  await expect(cards(page)).toHaveCount(6);
   await page.keyboard.press("Space");
   await expect(taste).toHaveAttribute("aria-pressed", "false");
   await page.getByRole("button", { name: "cheesecake" }).focus();

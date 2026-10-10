@@ -2,12 +2,20 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { cakes, filterDefinitions, selectCakes } from "../src/data.js";
 
-test("12 menus use valid categories, unique IDs, prices and category-specific taste values", () => {
-  assert.equal(cakes.length, 12);
-  assert.equal(new Set(cakes.map((cake) => cake.id)).size, 12);
+test("24 menus use valid categories, unique IDs, prices and category-specific taste values", () => {
+  assert.equal(cakes.length, 24);
+  assert.equal(new Set(cakes.map((cake) => cake.id)).size, 24);
   for (const category of ["chocolate", "cheesecake"]) {
     const menus = cakes.filter((cake) => cake.category === category);
-    assert.equal(menus.length, 6);
+    assert.equal(menus.length, 12);
+    assert.equal(
+      new Set(menus.map((c) => [c.taste, c.texture, c.style].join("|"))).size,
+      8,
+    );
+    for (const group of filterDefinitions[category]) {
+      for (const option of group.options)
+        assert.equal(menus.filter((c) => c[group.key] === option).length, 6);
+    }
     for (const cake of menus) {
       assert.ok(Number.isInteger(cake.price) && cake.price > 0);
       assert.ok(cake.components.length >= 2 && cake.components.length <= 3);

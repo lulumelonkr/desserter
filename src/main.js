@@ -1,6 +1,10 @@
 import "@fontsource-variable/noto-sans-kr";
 import "./style.css";
+import "./admin.css";
 import { cakes, filterDefinitions, selectCakes } from "./data.js";
+import { setupAdmin } from "./admin.js";
+
+let menuCatalog = [...cakes];
 
 const state = {
   category: "chocolate",
@@ -52,10 +56,10 @@ function imageMarkup(cake, eager = false) {
   const sprite = Number.isInteger(cake.imagePosition);
   const column = sprite ? cake.imagePosition % 3 : 0;
   const row = sprite ? Math.floor(cake.imagePosition / 3) : 0;
-  return `<div class="cake-photo ${sprite ? "is-sprite" : ""}">
-    <div class="image-fallback" role="img" aria-label="${escape(cake.name)} 예시 이미지를 불러오지 못했어요" hidden><img src="./images/cake.svg" alt="" /><span>이미지를 준비하고 있어요</span></div>
-    <img class="menu-image" src="${escape(cake.imageUrl)}" alt="${escape(cake.name)} 예시 이미지" loading="${eager ? "eager" : "lazy"}" style="--column:${column};--row:${row}" />
-    <span class="sample-label">예시 이미지</span>
+  return `<div class="cake-photo ${sprite ? "is-sprite" : ""} ${cake.imageTileRatio === 1 ? "is-square-atlas" : ""}">
+    <div class="image-fallback" role="img" aria-label="${escape(cake.name)} 이미지를 불러오지 못했어요" hidden><img src="./images/cake.svg" alt="" /><span>이미지를 준비하고 있어요</span></div>
+    <img class="menu-image" src="${escape(cake.imageUrl)}" alt="${escape(cake.name)} ${cake.id.startsWith("local-") ? "등록 사진" : "예시 이미지"}" loading="${eager ? "eager" : "lazy"}" style="--column:${column};--row:${row}" />
+    <span class="sample-label">${cake.id.startsWith("local-") ? "내가 등록한 메뉴" : "예시 이미지"}</span>
   </div>`;
 }
 
@@ -76,7 +80,7 @@ function tagsMarkup(cake) {
 }
 
 function renderResults() {
-  const result = selectCakes(state);
+  const result = selectCakes(state, menuCatalog);
   document.querySelectorAll("[data-filter]").forEach((button) => {
     button.setAttribute(
       "aria-pressed",
@@ -149,7 +153,8 @@ document.addEventListener("click", (event) => {
   }
   if (event.target.closest("[data-reset]")) resetFilters();
   const card = event.target.closest("[data-cake]");
-  if (card) openDetails(cakes.find((cake) => cake.id === card.dataset.cake));
+  if (card)
+    openDetails(menuCatalog.find((cake) => cake.id === card.dataset.cake));
 });
 
 $("#search").addEventListener("input", (event) => {
@@ -188,7 +193,23 @@ function openDetails(cake) {
     <h2 id="detail-title">${escape(cake.name)}</h2><p class="detail-price">${money(cake.price)} <span>/ 한 조각</span></p>
     <h3>이 한 조각의 구성</h3><p class="detail-components">${cake.components.map(escape).join(" · ")}</p>
     <h3>맛의 특징</h3>${tagsMarkup(cake)}<p id="detail-description">${escape(cake.description)}</p>
-    <p class="detail-notice">데모 메뉴이며 실제 판매 정보가 아닙니다.<br />사진은 AI로 만든 예시 이미지입니다.</p>
+    ${
+      cake.id.startsWith("local-")
+        ? `<h3>가게 정보</h3><dl class="shop-details">${[
+            ["주소", cake.shopAddress],
+            ["영업 시간", cake.shopHours],
+            ["연락처", cake.shopContact],
+          ]
+            .filter(([, value]) => value)
+            .map(
+              ([label, value]) =>
+                `<div><dt>${label}</dt><dd>${escape(value)}</dd></div>`,
+            )
+            .join(
+              "",
+            )}</dl>${cake.shopWebsite ? `<a class="shop-website" href="${escape(cake.shopWebsite)}" target="_blank" rel="noopener noreferrer">가게 홈페이지 ↗</a>` : ""}<p class="detail-notice">이 브라우저에 직접 등록한 메뉴입니다.<br />다른 방문자에게 공개되지 않습니다.</p>`
+        : '<p class="detail-notice">데모 메뉴이며 실제 판매 정보가 아닙니다.<br />사진은 AI로 만든 예시 이미지입니다.</p>'
+    }
   </div>`;
   wireImageFallbacks($("#detail-content"));
   document.body.style.top = `-${previousScroll}px`;
@@ -237,3 +258,9 @@ dialog.addEventListener("close", () => {
 
 mountFilters();
 renderResults();
+setupAdmin({
+  onMenusChanged: (menus) => {
+    menuCatalog = [...cakes, ...menus];
+    renderResults();
+  },
+});
