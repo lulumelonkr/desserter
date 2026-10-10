@@ -954,33 +954,35 @@ dialog::backdrop {
     display: block;
   }
   .results-filter-panel .filter-group {
-    display: grid;
-    grid-template-columns: 62px 1fr;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 0;
+    display: block;
+    padding: 12px 0;
     border-bottom: 1px solid #e1d8cb;
   }
   .results-filter-panel .filter-group:last-child {
     border: 0;
   }
   .results-filter-panel .filter-group legend {
-    margin: 0;
-    padding-top: 15px;
-    font-size: 10px;
+    float: none;
+    width: auto;
+    margin: 0 0 8px;
+    padding: 0;
+    font-size: 12px;
   }
   .results-filter-panel .filter-options {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 5px;
-    clear: none;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
   }
   .results-filter-panel .filter-option {
-    white-space: normal;
-    font-size: 11px;
-    gap: 6px;
-    min-height: 46px;
-    padding: 8px 5px;
+    flex: 1 1 calc(50% - 4px);
+    min-width: max-content;
+    white-space: nowrap;
+    font-size: 12px;
+    gap: 8px;
+    min-height: 48px;
+    padding: 10px;
   }
   .results-filter-panel .text-button {
     display: block;
@@ -1097,13 +1099,6 @@ dialog::backdrop {
   .results-filter-panel {
     padding-left: 10px;
     padding-right: 10px;
-  }
-  .results-filter-panel .filter-group {
-    grid-template-columns: 53px 1fr;
-  }
-  .results-filter-panel .filter-option {
-    font-size: 10px;
-    gap: 5px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

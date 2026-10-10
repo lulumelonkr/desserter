@@ -7,6 +7,29 @@ const filter = (page, group, value, area = "첫 화면") =>
   page.getByRole("button", { name: `${area} ${group}: ${value}`, exact: true });
 const cards = (page) => page.locator(".cake-card");
 
+async function expectReadableMobileFilters(page) {
+  const labels = await page.locator("#results-filters .filter-option").evaluateAll(
+    buttons => buttons.map(button => {
+      const label = button.lastElementChild;
+      const range = document.createRange();
+      range.selectNodeContents(label);
+      const rects = [...range.getClientRects()];
+      const bounds = button.getBoundingClientRect();
+      return {
+        text: label.textContent,
+        lines: new Set(rects.map(rect => Math.round(rect.top))).size,
+        fits: rects.every(rect => rect.left >= bounds.left && rect.right <= bounds.right),
+        height: bounds.height,
+      };
+    }),
+  );
+  for (const label of labels) {
+    expect(label.lines, label.text).toBe(1);
+    expect(label.fits, label.text).toBe(true);
+    expect(label.height, label.text).toBeLessThanOrEqual(60);
+  }
+}
+
 test("category switching resets taste filters and shows the correct six menus", async ({
   page,
 }) => {
@@ -201,9 +224,11 @@ for (const width of [320, 375, 768, 1280]) {
           (el) => getComputedStyle(el).gridTemplateColumns.split(" ").length,
         );
       expect(grid).toBe(1);
+      await expectReadableMobileFilters(page);
     }
     await page.getByRole("button", { name: "cheesecake" }).click();
     await filter(page, "치즈 풍미", "치즈맛 강하지 않음").click();
+    if (width < 700) await expectReadableMobileFilters(page);
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth),
     ).toBeLessThanOrEqual(width);
