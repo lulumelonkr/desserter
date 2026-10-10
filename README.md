@@ -1,0 +1,94 @@
+# desserter
+
+공간보다 맛, 내 입맛에 맞는 케이크 찾기. 첨부 화면의 로고와 체리 케이크를 참고해 SVG로 재현한 반응형 디저트 큐레이션 웹사이트입니다.
+
+## 실행
+
+Node.js 20.19 이상 또는 22.12 이상이 필요합니다. 현재 클라우드 환경에서는 Node.js 24로 검증했습니다.
+
+```sh
+cd /workspace/desserter
+npm ci --cache /workspace/.cache/npm
+npm run dev
+```
+
+일반 PC에서는 프로젝트 폴더에서 `npm ci`, `npm run dev`를 실행하면 됩니다. Vite가 표시하는 주소를 브라우저에서 여세요. 개발 서버 기본 포트는 5173입니다.
+
+```sh
+npm run build       # dist/에 정적 배포 파일 생성
+npm run preview     # 빌드 결과 확인
+npm test            # 데이터 유효성·필터·검색·정렬 검증
+npm run test:e2e    # 실제 Chromium 브라우저 기능 검증
+```
+
+브라우저 테스트는 `/usr/bin/chromium`이 있으면 사용합니다. 다른 경로는 `CHROMIUM_PATH` 환경 변수로 지정할 수 있습니다. 브라우저가 없는 PC에서는 먼저 `npx playwright install chromium`을 실행하세요. 테스트 서버는 자동으로 실행되며 기본적으로 포트 5173을 사용합니다.
+
+## 기능
+
+- 초코케이크·치즈케이크별 6개씩, 총 12개의 가상 메뉴
+- 케이크 종류에 맞는 맛 필터 3개 항목, 항목별 단일 선택과 재선택 해제
+- 항목 간 AND 조건, 첫 화면과 결과 영역의 선택 상태 동기화
+- GO 버튼으로 결과 위치 이동. 미선택 항목은 조건을 제한하지 않음
+- 이름·가게·구성요소 검색, 기본 순서·가격 오름차순·가격 내림차순
+- 선택 필터 표시와 개별 해제, 필터 초기화, 결과 수, 빈 목록과 검색어 지우기
+- 이미지 오류 시 크기를 유지하는 대체 화면
+- 상세 모달의 큰 사진·가격·구성요소·맛 태그·소개
+- 모달 닫기·ESC·포커스 제한, 목록 복귀 시 필터·검색·정렬·스크롤 유지
+- 키보드 버튼 조작, 선택 상태의 체크·테두리·색상 표시, 모바일 한 열 목록
+
+필터 초기화는 맛 조건만 해제합니다. 검색어와 정렬은 유지되며 검색어는 별도로 지울 수 있습니다. 종류 전환 시 맛 필터만 초기화됩니다. 선택 조건은 페이지가 열려 있는 동안 유지됩니다.
+
+## 메뉴와 사진 교체
+
+메뉴 데이터는 **`src/data.js`**의 `cakes` 배열에 있습니다. 화면 코드와 분리되어 있습니다.
+
+```js
+{
+  id: 'my-menu-01',              // 중복 없는 ID
+  category: 'chocolate',        // chocolate 또는 cheesecake
+  name: '초코케이크',
+  shopName: '가게 이름',
+  price: 7800,                 // 한 조각 가격: 숫자
+  imageUrl: './images/my-cake.jpg',
+  components: ['다크초콜릿', '가나슈', '초코시트'], // 2~3개
+  taste: '달지 않음',           // 초코: 달콤함 / 달지 않음
+  texture: '꾸덕함',            // 부드러움 / 꾸덕함
+  style: '클래식파',            // 클래식파 / 개성파
+  description: '맛과 재료에 대한 소개',
+}
+```
+
+치즈케이크의 `taste`는 `치즈맛 강함` 또는 `치즈맛 강하지 않음`입니다. 각 맛 속성에는 하나의 값만 지정하세요.
+
+현재 데모 사진은 `public/images/cakes.png` 한 장에 3열·4행으로 담긴 AI 생성 사진입니다. 데모 데이터의 **`imagePosition`**은 0~11번 사진 위치를 지정합니다. 실제 개별 사진으로 바꿀 때는 `public/images/`에 사진을 넣고 `imageUrl`을 수정한 뒤 **`imagePosition` 속성을 제거하세요**. 개별 사진은 자동으로 카드 크기에 맞춰 표시됩니다.
+
+브랜드 이미지는 `public/images/logo.svg`, `public/images/cake.svg`입니다. 현재는 원본 파일 없이 첨부 화면을 참고해 재현한 이미지입니다. 원본 파일을 확보하면 이 경로의 파일 또는 `index.html`의 이미지 경로를 교체하세요.
+
+실제 판매 정보로 전환할 때에는 데이터 검증과 사진 사용 권한을 확인한 뒤 `index.html`의 데모 안내, `src/main.js`의 상세 안내·예시 이미지 라벨을 함께 수정하세요. 현재 메뉴와 가게는 모두 가상이며, 사진도 실제 제품이 아닙니다.
+
+## 구조
+
+```text
+index.html               첫 화면·목록·모달 기본 구조
+src/data.js              메뉴와 필터 정의·검색 함수
+src/main.js              상태 관리·목록·상세·이미지 오류 처리
+src/style.css            데스크톱·모바일 스타일
+public/images/           브랜드 SVG와 데모 케이크 사진
+public/fonts/OFL.txt     포함된 한국어 글꼴 라이선스
+tests/data.test.js       데이터와 조건 결합 검증
+tests/site.spec.js       브라우저 사용자 흐름 검증
+```
+
+Vite와 기본 JavaScript로 구현했으며 로그인, 데이터베이스, 외부 API가 필요 없습니다. 글꼴과 이미지를 포함하여 실행 후에는 외부 사진·글꼴 서비스에 의존하지 않습니다. `dist/`를 정적 호스팅 서비스에 올려 배포할 수 있습니다.
+
+## GitHub Pages 배포
+
+빌드 결과는 루트 도메인뿐 아니라 `/desserter/` 하위 주소에서도 작동하도록 상대 경로를 사용합니다.
+
+`gh-pages` 브랜치의 빌드 파일을 공개하려면 GitHub 저장소의 **Settings → Pages → Build and deployment**에서 다음을 설정하세요.
+
+- Source: **Deploy from a branch**
+- Branch: **gh-pages**, 경로: **/ (root)**
+- **Save**
+
+배포 완료 후 공개 주소는 `https://lulumelonkr.github.io/desserter/`입니다. 이후 소스 변경 시 `npm run build`로 다시 빌드하고 새 `dist/` 내용을 `gh-pages` 브랜치에 배포해야 공개 사이트에도 반영됩니다.

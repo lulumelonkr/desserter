@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#faf8f4" />
+    <meta
+      name="description"
+      content="공간보다 맛, 내 입맛에 맞는 케이크 찾기. 초코케이크와 치즈케이크의 맛을 골라보세요."
+    />
+    <title>desserter — 내 취향의 케이크</title>
+    <link rel="icon" href="./images/cake.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">본문으로 건너뛰기</a>
+    <header class="site-header">
+      <a class="brand" href="#" aria-label="desserter 처음으로"
+        ><img src="./images/logo.svg" alt="desserter" width="168" height="40"
+      /></a>
+      <nav aria-label="케이크 종류" class="category-nav">
+        <button type="button" data-category="chocolate" aria-pressed="true">
+          chococake<span class="nav-check" aria-hidden="true">✓</span>
+        </button>
+        <button type="button" data-category="cheesecake" aria-pressed="false">
+          cheesecake<span class="nav-check" aria-hidden="true">✓</span>
+        </button>
+      </nav>
+      <span class="header-note">a little slice of happiness</span>
+    </header>
+    <main id="main">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-intro">
+          <img
+            class="cake-illustration"
+            src="./images/cake.svg"
+            alt="빨간 체리가 올라간 케이크 일러스트"
+            width="146"
+            height="158"
+          />
+          <h1 id="hero-title">당신의 취향은<br />무엇인가요?</h1>
+          <p>
+            공간보다 맛,<br class="mobile-break" />
+            내 입맛에 맞는 케이크 찾기
+          </p>
+          <span class="hero-footnote">취향대로 고르는, 기분 좋은 한 조각.</span>
+        </div>
+        <div class="taste-panel">
+          <div class="panel-heading">
+            <span class="eyebrow">FIND YOUR TASTE</span
+            ><span id="hero-category-label">초코케이크</span>
+          </div>
+          <div id="hero-filters" class="filter-groups"></div>
+          <p class="style-help">
+            클래식파는 익숙한 조합, 개성파는 색다른 재료와 조합이에요.
+          </p>
+          <div class="panel-actions">
+            <button type="button" class="text-button" data-reset>
+              필터 초기화</button
+            ><button type="button" class="go-button" id="go">
+              GO <span aria-hidden="true">↗</span>
+            </button>
+          </div>
+        </div>
+      </section>
+      <section
+        class="results-section"
+        id="results"
+        aria-labelledby="results-title"
+      >
+        <div class="results-heading">
+          <div>
+            <span class="eyebrow">YOUR NEXT SWEET MOMENT</span>
+            <h2 id="results-title">
+              취향에 맞는 한 조각<span class="red-dot">.</span>
+            </h2>
+          </div>
+          <p>맛을 고르면, 케이크가 보여요.</p>
+        </div>
+        <div class="results-toolbar">
+          <div class="search-control">
+            <span aria-hidden="true">⌕</span
+            ><label for="search" class="sr-only"
+              >케이크 이름, 가게 이름, 구성요소 검색</label
+            ><input
+              id="search"
+              type="search"
+              placeholder="케이크, 가게, 재료를 검색해 보세요"
+              autocomplete="off"
+            /><button
+              type="button"
+              id="clear-search"
+              aria-label="검색어 지우기"
+              hidden
+            >
+              ×
+            </button>
+          </div>
+          <div class="sort-control">
+            <label for="sort">정렬</label
+            ><select id="sort">
+              <option value="default">기본 순서</option>
+              <option value="asc">가격 낮은 순</option>
+              <option value="desc">가격 높은 순</option>
+            </select>
+          </div>
+        </div>
+        <div class="results-filter-panel">
+          <div id="results-filters"></div>
+          <button type="button" class="text-button" data-reset>
+            필터 초기화
+          </button>
+        </div>
+        <div class="results-meta">
+          <p id="result-count" role="status" aria-live="polite"></p>
+          <div id="active-filters" aria-label="선택된 맛 필터"></div>
+        </div>
+        <div id="cake-grid" class="cake-grid"></div>
+        <div id="empty-state" class="empty-state" hidden>
+          <span aria-hidden="true">♡</span>
+          <h3>선택한 맛에 맞는 케이크가 없어요</h3>
+          <p>맛 조건을 조금 바꾸면 새로운 한 조각을 만날 수 있어요.</p>
+          <div>
+            <button type="button" class="primary-button" data-reset>
+              필터 초기화</button
+            ><button
+              type="button"
+              class="secondary-button"
+              id="empty-clear-search"
+              hidden
+            >
+              검색어 지우기
+            </button>
+          </div>
+        </div>
+        <p class="demo-notice">
+          데모 메뉴이며 실제 판매 정보가 아닙니다.<br />사진은 AI로 만든 예시
+          이미지로, 실제 판매 제품이 아닙니다.
+        </p>
+      </section>
+    </main>
+    <footer class="site-footer">
+      <img src="./images/logo.svg" alt="desserter" width="122" height="29" />
+      <p>당신의 취향에, 한 조각 더 가까이.</p>
+      <span>MADE FOR YOUR TASTE</span>
+    </footer>
+    <dialog
+      id="cake-dialog"
+      aria-labelledby="detail-title"
+      aria-describedby="detail-description"
+    >
+      <div class="dialog-inner">
+        <button
+          type="button"
+          id="close-dialog"
+          class="close-dialog"
+          aria-label="상세 보기 닫기"
+        >
+          ×
+        </button>
+        <div id="detail-content"></div>
+      </div>
+    </dialog>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
